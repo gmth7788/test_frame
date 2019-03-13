@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testcase>
 	<SrcType>Python</SrcType>
-	<Browser>Chrome</Browser>
+	<Browser>Firefox</Browser>
 	<CaseId>id12345</CaseId>
 	<Product>产品</Product>
 	<Module>系统管理</Module>

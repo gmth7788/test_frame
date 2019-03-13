@@ -44,6 +44,8 @@ class my_frame():
         browser_type = root.find("Browser")
         if browser_type.text.lower() == "chrome":
             self.browser = webdriver.Chrome()
+        else:
+            self.browser = webdriver.Firefox(executable_path=r'geckodriver')
 
         # 测试用例编号
         case_id = root.find("CaseId")
@@ -184,6 +186,7 @@ class my_frame():
                     break
 
                 # 处理tpl_check模板
+                # todo: firefox，单步成功，运行失败。问题待查。
                 if i.tag.lower() == "templateid" and \
                         i.text.lower() == "tpl_check":
                     self.tpl_check(node)
