@@ -119,12 +119,46 @@ class my_frame():
 
     def tpl_check(self, node):
         '''
-        处理tpl_input模板
-        按照<ByWhere>指定的xpath定位到文本框；
-        将<Args>指定的参数输入到该文本框
+        处理tpl_check模板
+        按照<ByWhere>指定的xpath定位到文本，
+        与<Args>指定的参数相同，则成功。
         :param node: <step></step>结点
-        :return:
+        :return: 成功返回0
         '''
+        by = None
+        bywhere = None
+        action = None
+        args = None
+        ret = -1
+
+        for i in node:
+            if i.tag.lower() == "by" and \
+                    i.text.lower() == "xpath":
+                by = "xpath"
+            if i.tag.lower() == "bywhere":
+                bywhere = i.text
+            if i.tag.lower() == "action" and \
+                    i.text.lower() == "check":
+                action = i.text
+            if i.tag.lower() == "args":
+                args = i.text
+
+        if by is not None and \
+                bywhere is not None and \
+                action is not None and \
+                args is not None:
+            elem = self.browser.find_element_by_xpath(
+                bywhere)
+            if elem.text.lower() == args:
+                ret = 0
+
+        if ret == 0:
+            my_log.log("执行成功。")
+        else:
+            my_log.log("执行失败！")
+
+        return ret
+
 
     def get_steps(self, step):
         for node in step:
@@ -149,7 +183,11 @@ class my_frame():
                     self.tpl_submit(node)
                     break
 
-
+                # 处理tpl_check模板
+                if i.tag.lower() == "templateid" and \
+                        i.text.lower() == "tpl_check":
+                    self.tpl_check(node)
+                    break
 
 
     def exec_tc(self, xmlfile):

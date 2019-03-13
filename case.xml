@@ -43,5 +43,15 @@
 			<Action>click</Action>
 			<DataSource>db</DataSource>
 		</Step>
+		<Step>
+			<TemplateId>tpl_check</TemplateId>
+			<Func>查找id为____的对象是否包含_____文本</Func>
+			<Mode>src</Mode>
+			<By>xpath</By>
+			<ByWhere>//*[@id="header"]/div[2]/span/a[1]/b</ByWhere>
+			<Action>check</Action>
+			<DataSource>db</DataSource>
+			<Args>user</Args>
+		</Step>
 	</Steps>
 </testcase>
