@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- input模板 -->
+<Template>
+	<Type>操作</Type>
+	<Func>文本输入框中输入字符串</Func>
+	<url>URL</url>
+	<Mode>src</Mode>
+	<By>xpath</By>
+	<ByWhere>//*[@id="j_username"]</ByWhere>
+	<Action>input</Action>
+	<DataSource>db</DataSource>
+	<Args>user</Args>
+</Template>

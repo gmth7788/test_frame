@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- input模板 -->
+<Template>
+	<Type>操作</Type>
+	<Func>提交</Func>
+	<url>URL</url>
+	<Mode>src</Mode>
+	<By>xpath</By>
+	<ByWhere>//*[@id="j_username"]</ByWhere>
+	<Action>click</Action>
+	<DataSource>db</DataSource>
+</Template>

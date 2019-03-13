@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Template>
+	<Type>操作</Type>
+	<Func>打开浏览器，访问____</Func>
+	<url>http://localhost:8889/login?from=%2F</url>
+</Template>
