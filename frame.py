@@ -194,7 +194,7 @@ class xml_parse():
 if __name__ == "__main__":
     fr = my_frame()
 
-    ret = fr.exec_tc(r"D:\wangbin\my_workspace\sjs_test\case.xml")
+    ret = fr.exec_tc(r"./case.xml")
 
     fr.quit()
 

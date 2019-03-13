@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testcase>
+	<SrcType>Python</SrcType>
+	<Browser>Chrome</Browser>
+	<CaseId>id12345</CaseId>
+	<Product>产品</Product>
+	<Module>系统管理</Module>
+	<Group>BVT</Group>
+	<Type>ACase</Type>
+	<Steps>
+		<Step>
+			<TemplateId>tpl_openurl</TemplateId>
+			<Func>打开浏览器，访问____</Func>
+			<url>http://localhost:8889/login?from=%2F</url>
+		</Step>
+		<Step>
+			<TemplateId>tpl_input</TemplateId>
+			<Func>文本输入框中输入字符串</Func>
+			<Mode>src</Mode>
+			<By>xpath</By>
+			<ByWhere>//*[@id="j_username"]</ByWhere>
+			<Action>input</Action>
+			<Args>user</Args>
+		</Step>
+		<Step>
+			<TemplateId>tpl_input</TemplateId>
+			<Func>文本输入框中输入字符串</Func>
+			<url>http://localhost:8889/login?from=%2F</url>
+			<Mode>src</Mode>
+			<By>xpath</By>
+			<ByWhere>/html/body/div/div/form/div[2]/input</ByWhere>
+			<Action>input</Action>
+			<DataSource>db</DataSource>
+			<Args>123456</Args>
+		</Step>
+		<Step>
+			<TemplateId>tpl_submit</TemplateId>
+			<Func>提交</Func>
+			<url>http://localhost:8889/login?from=%2F</url>
+			<Mode>src</Mode>
+			<By>xpath</By>
+			<ByWhere>/html/body/div/div/form/div[3]/input</ByWhere>
+			<Action>click</Action>
+			<DataSource>db</DataSource>
+		</Step>
+	</Steps>
+</testcase>
