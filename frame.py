@@ -25,6 +25,7 @@ import xml
 import defusedxml.ElementTree as ET
 
 import my_log
+import my_exception
 
 class my_frame():
     browser = None
@@ -33,32 +34,90 @@ class my_frame():
         my_log.init_log()
 
     def quit(self):
-        self.browser.quit()
+        if self.browser is not None:
+            self.browser.quit()
 
+    def proc_except(self, e):
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        my_log(exc_type, fname, exc_tb.tb_lineno)
+        my_log(e)
+
+    def get_xml_node_text(self, root, tag):
+        '''
+        从xml中搜索tag，返回其内容；
+        若未找到，抛出异常
+        :param root:
+        :param tag:
+        :return:
+        '''
+        if root == None:
+            raise my_exception("异常：输入项为空")
+        node = root.find(tag)
+        if node is None:
+            raise my_exception('异常：不能找到"{0}"标签'.format(tag))
+        else:
+            return node.text.lower()
+
+    def selenium_input_by_xpath(self, xpath, args):
+        '''
+        按照xpath搜索页面元素，
+        若发现元素，则向其输入args；否则抛出异常。
+        :param xpath:
+        :param args:
+        :return:
+        '''
+        try:
+            self.browser.find_element_by_xpath(
+                xpath).send_keys(args)
+        except NoSuchElementException as e:
+            print(e)
+            raise my_exception("异常：未找到{0}".format(xpath))
+
+    def selenium_check_by_xpath(self, xpath, args):
+        '''
+        按照xpath搜索页面元素，
+        若元素文本与args相同，返回True；否则抛出异常。
+        :param xpath:
+        :param args:
+        :return:
+        '''
+        try:
+            elem = self.browser.find_element_by_xpath(xpath)
+            if elem.text.lower() == args:
+                return True
+            else:
+                raise my_exception("异常：未找到期望的文本'{0}'".format(args))
+        except NoSuchElementException as e:
+            print(e)
+            raise my_exception("异常：未找到{0}".format(xpath))
 
     def get_head(self, root):
-        if root == None:
-            return
+        try:
+            # 浏览器类型
+            browser_type = self.get_xml_node_text(root, "Browser")
+            if browser_type == "chrome":
+                self.browser = webdriver.Chrome()
+            else:
+                self.browser = webdriver.Firefox(
+                    executable_path=r'geckodriver')
 
-        # 浏览器类型
-        browser_type = root.find("Browser")
-        if browser_type.text.lower() == "chrome":
-            self.browser = webdriver.Chrome()
-        else:
-            self.browser = webdriver.Firefox(executable_path=r'geckodriver')
+            # 测试用例编号
+            case_id = self.get_xml_node_text(root, "CaseId")
+            my_log.log("{0}\n测试用例：{1}".format(
+                "*"*60, case_id))
 
-        # 测试用例编号
-        case_id = root.find("CaseId")
-        my_log.log("{0}\n测试用例：{1}".format(
-            "*"*60, case_id.text))
+            # 产品
+            product = self.get_xml_node_text(root, "Product")
+            my_log.log("产品：{0}".format(product))
 
-        # 产品
-        case_id = root.find("Product")
-        my_log.log("产品：{0}".format(case_id.text))
+            # 模块
+            module = self.get_xml_node_text(root, "Module")
+            my_log.log("模块：{0}".format(module))
 
-        # 模块
-        case_id = root.find("Module")
-        my_log.log("模块：{0}".format(case_id.text))
+        except my_exception as e:
+            self.proc_except(e)
+
 
     def tpl_openurl(self, node):
         '''
@@ -67,10 +126,11 @@ class my_frame():
         :param node: <step></step>结点
         :return:
         '''
-        for i in node:
-            if i.tag.lower() == "url":
-                self.browser.get(i.text)
-                break
+        try:
+            url = self.get_xml_node_text(node, "url")
+            self.browser.get(url)
+        except my_exception as e:
+            self.proc_except(e)
 
     def tpl_input(self, node):
         '''
@@ -80,23 +140,14 @@ class my_frame():
         :param node: <step></step>结点
         :return:
         '''
-        by = None
-        bywhere = None
-        args = None
-
-        for i in node:
-            if i.tag.lower() == "by" and \
-                    i.text.lower() == "xpath":
-                by = "xpath"
-            if i.tag.lower() == "bywhere":
-                bywhere = i.text
-            if i.tag.lower() == "args":
-                args = i.text
-        if by is not None and \
-            bywhere is not None and \
-            args is not None:
-            self.browser.find_element_by_xpath(
-                bywhere).send_keys(args)
+        try:
+            by = self.get_xml_node_text(node, "By")
+            bywhere = self.get_xml_node_text(node, "ByWhere")
+            args = self.get_xml_node_text(node, "Args")
+            if by == "xpath":
+                self.selenium_input_by_xpath(bywhere, args)
+        except my_exception as e:
+            self.proc_except(e)
 
     def tpl_submit(self, node):
         '''
@@ -105,19 +156,13 @@ class my_frame():
         :param node: <step></step>结点
         :return:
         '''
-        by = None
-        bywhere = None
-
-        for i in node:
-            if i.tag.lower() == "by" and \
-                    i.text.lower() == "xpath":
-                by = "xpath"
-            if i.tag.lower() == "bywhere":
-                bywhere = i.text
-        if by is not None and \
-                bywhere is not None:
-            self.browser.find_element_by_xpath(
-                bywhere).send_keys(Keys.ENTER)
+        try:
+            by = self.get_xml_node_text(node, "By")
+            bywhere = self.get_xml_node_text(node, "ByWhere")
+            if by == "xpath":
+                self.selenium_input_by_xpath(bywhere, Keys.ENTER)
+        except my_exception as e:
+            self.proc_except(e)
 
     def tpl_check(self, node):
         '''
@@ -125,44 +170,79 @@ class my_frame():
         按照<ByWhere>指定的xpath定位到文本，
         与<Args>指定的参数相同，则成功。
         :param node: <step></step>结点
-        :return: 成功返回0
+        :return: 成功返回True
         '''
-        by = None
-        bywhere = None
-        action = None
-        args = None
-        ret = -1
+        try:
+            ret = False
+            by = self.get_xml_node_text(node, "By")
+            bywhere = self.get_xml_node_text(node, "ByWhere")
+            action = self.get_xml_node_text(node, "Action")
+            args = self.get_xml_node_text(node, "Args")
+            success_info = self.get_xml_node_text(node, "success_info")
+            fail_info = self.get_xml_node_text(node, "fail_info")
+            if by == "xpath":
+                ret = self.selenium_check_by_xpath(bywhere, args)
+            if ret == True:
+                my_log.log(success_info)
+            else:
+                my_log.log(fail_info)
+            return ret
+        except my_exception as e:
+            self.proc_except(e)
 
-        for i in node:
-            if i.tag.lower() == "by" and \
-                    i.text.lower() == "xpath":
-                by = "xpath"
-            if i.tag.lower() == "bywhere":
-                bywhere = i.text
-            if i.tag.lower() == "action" and \
-                    i.text.lower() == "check":
-                action = i.text
-            if i.tag.lower() == "args":
-                args = i.text
 
-        if by is not None and \
-                bywhere is not None and \
-                action is not None and \
-                args is not None:
-            elem = self.browser.find_element_by_xpath(
-                bywhere)
-            if elem.text.lower() == args:
-                ret = 0
 
-        if ret == 0:
-            my_log.log("执行成功。")
-        else:
-            my_log.log("执行失败！")
 
-        return ret
+
+
+        # by = None
+        # bywhere = None
+        # action = None
+        # args = None
+        # success_info = None
+        # fail_info = None
+        # ret = False
+        #
+        # for i in node:
+        #     if i.tag.lower() == "by" and \
+        #             i.text.lower() == "xpath":
+        #         by = "xpath"
+        #     if i.tag.lower() == "bywhere":
+        #         bywhere = i.text
+        #     if i.tag.lower() == "action" and \
+        #             i.text.lower() == "check":
+        #         action = i.text
+        #     if i.tag.lower() == "args":
+        #         args = i.text
+        #     if i.tag.lower() == "success_info":
+        #         success_info = i.text
+        #     if i.tag.lower() == "fail_info":
+        #         fail_info = i.text
+        #
+        # if by is not None and \
+        #         bywhere is not None and \
+        #         action is not None and \
+        #         args is not None:
+        #     try:
+        #         elem = self.browser.find_element_by_xpath(bywhere)
+        #         if elem.text.lower() == args:
+        #             ret = True
+        #     except NoSuchElementException:
+        #         pass
+        #         # print("except NoSuchElementException")
+        #
+        # if ret == True:
+        #     if success_info is not None:
+        #         my_log.log(success_info)
+        # else:
+        #     if fail_info is not None:
+        #         my_log.log(fail_info)
+        #
+        # return ret
 
 
     def get_steps(self, step):
+        ret = False
         for node in step:
             for i in node:
                 print(i.tag, i.text)
@@ -189,8 +269,9 @@ class my_frame():
                 # todo: firefox，单步成功，运行失败。问题待查。
                 if i.tag.lower() == "templateid" and \
                         i.text.lower() == "tpl_check":
-                    self.tpl_check(node)
+                    ret = self.tpl_check(node)
                     break
+        return ret
 
 
     def exec_tc(self, xmlfile):
@@ -199,15 +280,14 @@ class my_frame():
             tree = ET.parse(xmlfile)
             root = tree.getroot()
             self.get_head(root)
-            self.get_steps(root.iter("Step"))
-
-            time.sleep(2)
-
-            ret = True
+            ret = self.get_steps(root.iter("Step"))
+            time.sleep(5)
         except (EnvironmentError,
-                xml.parsers.expat.ExpatError) as err:
+                xml.parsers.expat.ExpatError) as e:
             my_log.log("{0}:import error: {1}".format(
-                os.path.basename(sys.argv[0]), err))
+                os.path.basename(sys.argv[0]), e))
+        except Exception as e:
+            self.proc_except(e)
         finally:
             return ret
 
@@ -233,11 +313,16 @@ class xml_parse():
 
 
 if __name__ == "__main__":
-    fr = my_frame()
+    try:
 
-    ret = fr.exec_tc(r"./case.xml")
+        fr = my_frame()
 
-    fr.quit()
+        ret = fr.exec_tc(r"./case.xml")
 
-    print(ret)
+        fr.quit()
+
+        print(ret)
+
+    except Exception as e:
+        print(e)
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testcase>
 	<SrcType>Python</SrcType>
-	<Browser>Firefox</Browser>
+	<Browser>Chrome</Browser>
 	<CaseId>id12345</CaseId>
 	<Product>产品</Product>
 	<Module>系统管理</Module>
@@ -52,6 +52,8 @@
 			<Action>check</Action>
 			<DataSource>db</DataSource>
 			<Args>user</Args>
+			<success_info>执行结果符合预期，OK！</success_info>
+			<fail_info>执行失败，Failed！</fail_info>
 		</Step>
 	</Steps>
 </testcase>
