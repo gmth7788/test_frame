@@ -79,7 +79,7 @@ class my_frame():
         if node is None:
             raise EXCP.my_exception('异常：不能找到"{0}"标签'.format(tag))
         else:
-            return node.text.lower()
+            return node.text
 
     # ----------------------------------------------------
     # 定位页面元素
@@ -316,7 +316,7 @@ if __name__ == "__main__":
 
         fr = my_frame()
 
-        ret = fr.exec_tc(r"./case.xml")
+        ret = fr.exec_tc(r"./test_case/login.xml")
 
         fr.quit()
 
