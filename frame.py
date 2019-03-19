@@ -229,7 +229,7 @@ class my_frame():
         try:
             # 浏览器类型
             browser_type = self.get_xml_node_text(root, "Browser")
-            if browser_type == "chrome":
+            if browser_type.lower() == "chrome":
                 self.browser = webdriver.Chrome()
             else:
                 self.browser = webdriver.Firefox(
