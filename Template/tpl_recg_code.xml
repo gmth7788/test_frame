@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Template>
+	<Type>操作</Type>
+	<Func>识别校验码</Func>
+	<image_By>xpath</image_By>
+	<image_ByWhere>//*[@id="codeImage"]</image_ByWhere>
+	<input_By>xpath</input_By>
+	<input_ByWhere>//*[@id="userCode"]</input_ByWhere>
+	<submit_By>xpath</submit_By>
+	<submit_ByWhere>//*[@id="btnLogin"]</submit_ByWhere>
+	<Action>get_recg_code</Action>
+</Template>

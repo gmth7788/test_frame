@@ -10,6 +10,9 @@ import os
 import time
 import sys
 
+import requests
+import pyautogui
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -25,7 +28,11 @@ import xml
 import defusedxml.ElementTree as ET
 
 import my_log
+import my_cfg
 import my_exception as EXCP
+
+
+
 
 class my_frame():
     browser = None
@@ -37,7 +44,11 @@ class my_frame():
         '''
         构造函数，初始化日志文件
         '''
+        self.cfg = my_cfg.my_config()
+
         my_log.init_log()
+
+
 
     def quit(self):
         '''
@@ -84,6 +95,21 @@ class my_frame():
     # ----------------------------------------------------
     # 定位页面元素
     # ----------------------------------------------------
+    def selenium_get_elem_by_xpath(self, xpath):
+        '''
+        按照xpath搜索页面元素
+        :param xpath:
+        :return: 成功返回元素，否则抛出异常
+        '''
+        elem = None
+        try:
+            elem = self.browser.find_element_by_xpath(xpath)
+            ret = elem
+        except NoSuchElementException as e:
+            raise EXCP.my_exception('异常：未找到xpath"{0}"'.format(xpath))
+        finally:
+            return elem
+
     def selenium_input_by_xpath(self, xpath, args):
         '''
         按照xpath搜索页面元素，
@@ -92,11 +118,8 @@ class my_frame():
         :param args:
         :return:
         '''
-        try:
-            self.browser.find_element_by_xpath(
-                xpath).send_keys(args)
-        except NoSuchElementException as e:
-            raise EXCP.my_exception("异常：未找到{0}".format(xpath))
+        elem = self.selenium_get_elem_by_xpath(xpath)
+        elem.send_keys(args)
 
     def selenium_check_text_by_xpath(self, xpath, args):
         '''
@@ -106,14 +129,53 @@ class my_frame():
         :param args:
         :return:
         '''
-        try:
-            elem = self.browser.find_element_by_xpath(xpath)
-            if elem.text.lower() == args:
-                return True
-            else:
-                raise EXCP.my_exception('异常：未找到期望的文本"{0}"'.format(args))
-        except NoSuchElementException as e:
-            raise EXCP.my_exception('异常：未找到xpath"{0}"'.format(xpath))
+        ret = False
+        elem = self.selenium_get_elem_by_xpath(xpath)
+        if elem.text == args:
+            ret = True
+        else:
+            raise EXCP.my_exception('异常：{0}，未找到期望的文本"{1}"'.format(
+                elem.text, args))
+        return ret
+
+    # ----------------------------------------------------
+    # 校验码识别
+    # ----------------------------------------------------
+    def jym_proc_4(self, image_element, file_name):
+        '''
+        校验码处理，方法四
+        使用pyAutoGUI完成界面操作
+        :param browser:
+        :param image_element:
+        :param file_name:
+        :return:
+        '''
+        # 鼠标移到屏幕中央
+        screenWidth, screenHeight = pyautogui.size()
+        pyautogui.moveTo(screenWidth / 2, screenHeight / 2)
+
+        root_path = os.path.dirname(file_name)
+
+        # 右键弹出菜单
+        ActionChains(self.browser).context_click(image_element).perform()
+        pyautogui.press("down")
+        pyautogui.press("down")
+        pyautogui.press("enter")
+
+        time.sleep(1)
+
+        screenWidth, screenHeight = pyautogui.size()
+        pyautogui.moveTo(screenWidth / 4, screenHeight / 4)
+
+        time.sleep(1)
+
+        # 弹出“另存为”对话框
+        print(file_name)
+        pyautogui.typewrite(file_name)
+        pyautogui.press("enter")
+        pyautogui.press("tab")
+        pyautogui.press("enter")
+
 
 
     # ----------------------------------------------------
@@ -185,6 +247,56 @@ class my_frame():
         except EXCP.my_exception as e:
             self.proc_except(e)
 
+    def tpl_recg_code(self, node):
+        '''
+        获取校验码
+        :param node: <step></step>结点
+        :return: 成功输入校验码，返回True，否则返回False
+        '''
+        ret = False
+        tmp_file = self.cfg.root_path + '\\' + self.cfg.tmp_image_file
+        img_file = self.cfg.root_path + '\\' + self.cfg.jym_image_file
+        try:
+            image_By = self.get_xml_node_text(node, "image_By")
+            image_ByWhere = self.get_xml_node_text(node, "image_ByWhere")
+            input_By = self.get_xml_node_text(node, "input_By")
+            input_ByWhere = self.get_xml_node_text(node, "input_ByWhere")
+            submit_By = self.get_xml_node_text(node, "submit_By")
+            submit_ByWhere = self.get_xml_node_text(node, "submit_ByWhere")
+            func = self.get_xml_node_text(node, "Func")
+
+            if image_By == "xpath":
+                Image_elem = self.selenium_get_elem_by_xpath(image_ByWhere)
+
+            if input_By == "xpath":
+                input_elem = self.selenium_get_elem_by_xpath(input_ByWhere)
+
+            if submit_By == "xpath":
+                submit_elem = self.selenium_get_elem_by_xpath(submit_ByWhere)
+
+            # 下载校验码图片文件
+            self.jym_proc_4(Image_elem, tmp_file)
+
+            # time.sleep(20)
+            jym = "ok"
+
+            # 输入校验码
+            self.selenium_input_by_xpath(input_ByWhere, jym)
+
+            # 提交
+            self.selenium_input_by_xpath(submit_ByWhere, Keys.ENTER)
+
+            my_log.log("（tpl_recg_code）{0}:{1},{2}".format(
+                func, image_By, image_ByWhere))
+
+            ret = True
+
+        except EXCP.my_exception as e:
+            self.proc_except(e)
+        finally:
+            return ret
+
+
     def tpl_check(self, node):
         '''
         处理tpl_check模板
@@ -203,8 +315,8 @@ class my_frame():
             fail_info = self.get_xml_node_text(node, "fail_info")
             func = self.get_xml_node_text(node, "Func")
 
-            my_log.log("（tpl_check）{0}:{1},{2},{3},{4}".format(
-                func, by, bywhere, action, args))
+            my_log.log("（tpl_check）{0}:{1},{2},{3}".format(
+                func, by, bywhere, args))
 
             if by == "xpath":
                 ret = self.selenium_check_text_by_xpath(bywhere, args)
@@ -254,6 +366,7 @@ class my_frame():
         finally:
             return ret
 
+
     def get_steps(self, step):
         '''
         执行测试步骤
@@ -285,6 +398,12 @@ class my_frame():
                 if id == "tpl_check":
                     ret = self.tpl_check(node)
                     continue
+
+                # 获取校验码
+                if id == "tpl_recg_code":
+                    ret = self.tpl_recg_code(node)
+                    continue
+
 
         except EXCP.my_exception as e:
             self.proc_except(e)
@@ -320,7 +439,7 @@ if __name__ == "__main__":
 
         fr.quit()
 
-        print(ret)
+        my_log.log(ret)
 
     except Exception as e:
         print(e)

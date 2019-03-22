@@ -6,7 +6,7 @@
 	<Product>产品</Product>
 	<Module>系统管理</Module>
 	<Group>BVT</Group>
-	<Type>ACase</Type>
+	<Type>ACase</Type>-+
 	<Steps>
 		<Step>
 			<TemplateId>tpl_openurl</TemplateId>
@@ -30,6 +30,29 @@
 			<ByWhere>//*[@id="password"]</ByWhere>
 			<Action>input</Action>
 			<Args>administrator</Args>
+		</Step>
+		<Step>
+			<TemplateId>tpl_recg_code</TemplateId>
+			<Func>识别校验码</Func>
+			<image_By>xpath</image_By>
+			<image_ByWhere>//*[@id="codeImage"]</image_ByWhere>
+			<input_By>xpath</input_By>
+			<input_ByWhere>//*[@id="userCode"]</input_ByWhere>
+			<submit_By>xpath</submit_By>
+			<submit_ByWhere>//*[@id="btnLogin"]</submit_ByWhere>
+			<Action>get_recg_code</Action>
+		</Step>
+		<Step>
+			<TemplateId>tpl_check</TemplateId>
+			<Func>查找id为____的对象是否包含_____文本</Func>
+			<Mode>src</Mode>
+			<By>xpath</By>
+			<ByWhere>//*[@id="userNameSpan"]</ByWhere>
+			<Action>check</Action>
+			<DataSource>db</DataSource>
+			<Args>系统管理员</Args>
+			<success_info>执行结果符合预期，OK！</success_info>
+			<fail_info>执行失败，Failed！</fail_info>
 		</Step>
 	</Steps>
 </testcase>
