@@ -13,6 +13,9 @@ import sys
 import requests
 import pyautogui
 
+import pytesseract
+from PIL import Image
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -176,6 +179,41 @@ class my_frame():
         pyautogui.press("tab")
         pyautogui.press("enter")
 
+    def fix_img(self, input_file, output_file):
+        '''
+        修理校验码图片
+        1）将灰色线条改为白色；
+        2）黑色线框改为白色；
+        3）蓝色字体改为黑色；
+        :param input_file: 校验码文件名
+        :return:
+        '''
+        img = Image.open(input_file)  # 读取系统的内照片
+        width = img.size[0]  # 长度
+        height = img.size[1]  # 宽度
+        for i in range(0, width):  # 遍历所有长度的点
+            for j in range(0, height):  # 遍历所有宽度的点
+                data = (img.getpixel((i, j)))  # 打印该图片的所有点
+                if not ((data[0] == 0) and (data[1] == 0) and (data[2] == 255)):
+                    img.putpixel((i, j), (255, 255, 255))
+                else:
+                    img.putpixel((i, j), (0, 0, 0))
+        img = img.convert("RGB")  # 把图片强制转成RGB
+        img.save(output_file)  # 保存修改像素点后的图片
+
+    def recg_jym(self, input_file):
+        '''
+        返回校验码
+        :param input_file: 经过修整的校验码图片
+        :return: 成功返回校验码，否则抛出异常
+        '''
+        img = Image.open(input_file)
+        text = pytesseract.image_to_string(img, lang='eng', config='--psm 6 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
+        text = text.replace(' ','')
+        my_log.log("获得识别码:{0}".format(text))
+        if len(text) != 4:
+            raise EXCP.my_exception('异常：校验码识别失败"{0}"'.format(text))
+        return text
 
 
     # ----------------------------------------------------
@@ -276,12 +314,17 @@ class my_frame():
 
             # 下载校验码图片文件
             self.jym_proc_4(Image_elem, tmp_file)
+            time.sleep(1)
 
-            # time.sleep(20)
-            jym = "ok"
+            # 修饰图片
+            self.fix_img(self.cfg.tmp_image_file, self.cfg.tmp1_image_file)
+
+            # 识别校验码
+            jym = self.recg_jym(self.cfg.tmp1_image_file)
 
             # 输入校验码
             self.selenium_input_by_xpath(input_ByWhere, jym)
+            time.sleep(1)
 
             # 提交
             self.selenium_input_by_xpath(submit_ByWhere, Keys.ENTER)
@@ -418,6 +461,12 @@ class my_frame():
             self.get_head(root)
             ret = self.get_steps(root.iter("Step"))
             time.sleep(5)
+
+            # 获取cookie
+            cookies = self.browser.get_cookie("sso_token")
+            print("sso_token = {0}".format(cookies))
+
+
         except (EnvironmentError,
                 xml.parsers.expat.ExpatError) as e:
             my_log.log("{0}: {1}".format(
