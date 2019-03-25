@@ -294,50 +294,76 @@ class my_frame():
         ret = False
         tmp_file = self.cfg.root_path + '\\' + self.cfg.tmp_image_file
         img_file = self.cfg.root_path + '\\' + self.cfg.jym_image_file
-        try:
-            image_By = self.get_xml_node_text(node, "image_By")
-            image_ByWhere = self.get_xml_node_text(node, "image_ByWhere")
-            input_By = self.get_xml_node_text(node, "input_By")
-            input_ByWhere = self.get_xml_node_text(node, "input_ByWhere")
-            submit_By = self.get_xml_node_text(node, "submit_By")
-            submit_ByWhere = self.get_xml_node_text(node, "submit_ByWhere")
-            func = self.get_xml_node_text(node, "Func")
+        for i in range(3):
+            try:
+                image_By = self.get_xml_node_text(node, "image_By")
+                image_ByWhere = self.get_xml_node_text(node, "image_ByWhere")
+                input_By = self.get_xml_node_text(node, "input_By")
+                input_ByWhere = self.get_xml_node_text(node, "input_ByWhere")
+                submit_By = self.get_xml_node_text(node, "submit_By")
+                submit_ByWhere = self.get_xml_node_text(node, "submit_ByWhere")
+                codeChange_By = self.get_xml_node_text(node, "codeChange_By")
+                codeChange_ByWhere = self.get_xml_node_text(node, "codeChange_ByWhere")
+                func = self.get_xml_node_text(node, "Func")
 
-            if image_By == "xpath":
-                Image_elem = self.selenium_get_elem_by_xpath(image_ByWhere)
+                if image_By == "xpath":
+                    Image_elem = self.selenium_get_elem_by_xpath(image_ByWhere)
 
-            if input_By == "xpath":
-                input_elem = self.selenium_get_elem_by_xpath(input_ByWhere)
+                if input_By == "xpath":
+                    input_elem = self.selenium_get_elem_by_xpath(input_ByWhere)
 
-            if submit_By == "xpath":
-                submit_elem = self.selenium_get_elem_by_xpath(submit_ByWhere)
+                if submit_By == "xpath":
+                    submit_elem = self.selenium_get_elem_by_xpath(submit_ByWhere)
 
-            # 下载校验码图片文件
-            self.jym_proc_4(Image_elem, tmp_file)
-            time.sleep(1)
+                if codeChange_By == "xpath":
+                    codeChange_elem = self.selenium_get_elem_by_xpath(codeChange_ByWhere)
 
-            # 修饰图片
-            self.fix_img(self.cfg.tmp_image_file, self.cfg.tmp1_image_file)
+                # 下载校验码图片文件
+                self.jym_proc_4(Image_elem, tmp_file)
+                time.sleep(1)
 
-            # 识别校验码
-            jym = self.recg_jym(self.cfg.tmp1_image_file)
+                # 修饰图片
+                self.fix_img(self.cfg.tmp_image_file, self.cfg.tmp1_image_file)
 
-            # 输入校验码
-            self.selenium_input_by_xpath(input_ByWhere, jym)
-            time.sleep(1)
+                # 识别校验码
+                jym = self.recg_jym(self.cfg.tmp1_image_file)
 
-            # 提交
-            self.selenium_input_by_xpath(submit_ByWhere, Keys.ENTER)
+                # 输入校验码
+                self.selenium_input_by_xpath(input_ByWhere, jym)
+                time.sleep(1)
 
-            my_log.log("（tpl_recg_code）{0}:{1},{2}".format(
-                func, image_By, image_ByWhere))
+                # 提交
+                self.selenium_input_by_xpath(submit_ByWhere, Keys.ENTER)
 
-            ret = True
+                my_log.log("（tpl_recg_code）{0}:{1},{2}".format(
+                    func, image_By, image_ByWhere))
 
-        except EXCP.my_exception as e:
-            self.proc_except(e)
-        finally:
-            return ret
+                time.sleep(1)
+
+                try:
+                    # 校验码不正确对话框
+                    alert = self.browser.switch_to.alert()
+                    # print(alert.text)
+                    # self.browser.switch_to_alert().accept()
+                    # 点击刷新校验码
+                    elem = self.selenium_get_elem_by_xpath(codeChange_ByWhere)
+                    elem.click()
+                    time.sleep(1)
+                    continue
+                except NoAlertPresentException as msg:
+                    # 校验码通过校验，退出循环
+                    ret = True
+
+            except EXCP.my_exception as e:
+                self.proc_except(e)
+
+                if e.find("异常：校验码识别失败"):
+                    elem = self.selenium_get_elem_by_xpath(codeChange_ByWhere)
+                    elem.click()
+                    time.sleep(1)
+                    continue
+            finally:
+                return ret
 
 
     def tpl_check(self, node):
@@ -460,12 +486,12 @@ class my_frame():
             root = tree.getroot()
             self.get_head(root)
             ret = self.get_steps(root.iter("Step"))
-            time.sleep(5)
 
             # 获取cookie
             cookies = self.browser.get_cookie("sso_token")
             print("sso_token = {0}".format(cookies))
 
+            ret = True
 
         except (EnvironmentError,
                 xml.parsers.expat.ExpatError) as e:
@@ -475,7 +501,6 @@ class my_frame():
             self.proc_except(e)
         finally:
             return ret
-
 
 
 
