@@ -12,6 +12,7 @@ import sys
 
 import requests
 import pyautogui
+import json
 
 import pytesseract
 from PIL import Image
@@ -340,14 +341,15 @@ class my_frame():
 
                 time.sleep(1)
 
+
+                # todo: 捕获对话框
                 try:
                     # 校验码不正确对话框
                     alert = self.browser.switch_to.alert()
                     # print(alert.text)
                     # self.browser.switch_to_alert().accept()
                     # 点击刷新校验码
-                    elem = self.selenium_get_elem_by_xpath(codeChange_ByWhere)
-                    elem.click()
+                    codeChange_elem.click()
                     time.sleep(1)
                     continue
                 except NoAlertPresentException as msg:
@@ -356,14 +358,14 @@ class my_frame():
 
             except EXCP.my_exception as e:
                 self.proc_except(e)
-
-                if e.find("异常：校验码识别失败"):
-                    elem = self.selenium_get_elem_by_xpath(codeChange_ByWhere)
-                    elem.click()
-                    time.sleep(1)
-                    continue
             finally:
-                return ret
+                if True != ret:
+                    codeChange_elem.click()
+                    time.sleep(1)
+                else:
+                    break
+
+        return ret
 
 
     def tpl_check(self, node):
@@ -397,6 +399,94 @@ class my_frame():
             self.proc_except(e)
         finally:
             return ret
+
+    def get_token(self, url, type, header, data, token_name):
+        '''
+        获得访问令牌token
+        :param url: 访问地址
+        :param type: 请求类型
+        :param header: 请求头
+        :param data: 请求数据
+        :param token_name: 令牌名称
+        :return:
+        '''
+        # 获取token
+        # data = {
+        #     "loginFrom": "passwordLogin4Mini",
+        #     "login_name": "administrator",
+        #     "app_id": "drapRootDomain",
+        #     "password": "administrator"
+        # }
+        # header = {'Content-Type': 'application/json'}
+        # r = requests.post('http://10.0.47.32:9009/aa/auth/login',
+        #                   json=data, headers=header)
+        #
+        # print(r.json())
+        # token = r.json()['sso_token']
+        # cookies = r.cookies.get_dict()
+        # print('token:{0}'.format(token))
+        # print('cookies:{0}'.format(cookies))
+        # return {'sso_token':r.json()['sso_token'],'cookies':r.cookies.get_dict()}
+        token = None
+        if type.lower() == 'post':
+            r = requests.post(url, json=data, headers=header)
+            token = r.json()[token_name]
+        return token
+
+    def tpl_itf(self, node):
+        '''
+        处理tpl_itf模板
+        https://www.cnblogs.com/leiziv5/p/6422954.html
+        :param node: <step></step>结点
+        :return: 成功返回True
+        '''
+        try:
+            url = self.get_xml_node_text(node, "Url")
+            type = self.get_xml_node_text(node, "Type")
+            header = self.get_xml_node_text(node, "Head")
+            data = self.get_xml_node_text(node, "Data")
+            func = self.get_xml_node_text(node, "Func")
+            token_name = self.get_xml_node_text(node, "token_name")
+
+            header = json.loads(header)
+            data = json.loads(data)
+
+            my_log.log("（tpl_itf）{0}:{1},{2},{3},{4}".format(
+                func, url, type, header, data))
+
+            if token_name is not None:
+                # 如果此项为空，则获取令牌
+                token = self.get_token(url, type, header,
+                                       data, token_name)
+                header[token_name] = token
+                # 保存到配置文件中
+                self.cfg.set_config('tokens', 'sso_token', token)
+            else:
+                # 从配置文件获取令牌
+                self.cfg.get_config()
+
+                header['sso_token'] = self.cfg.sso_token
+
+                if type.lower() == 'get':
+                    # todo: 待确认
+                    r = requests.get(url, headers=header, params=data)
+                    print("url:{0}".format(r.url))
+                    print("head:{0}".format(r.headers))
+                    print("text:{0}".format(r.text))
+                else:
+                    r = requests.post(url, json=data, headers=header)
+                    print("url:{0}".format(r.url))
+                    print("head:{0}".format(r.headers))
+                    print("text:{0}".format(r.text))
+
+        except EXCP.my_exception as e:
+            self.proc_except(e)
+
+
+
+
+
+
 
     #----------------------------------------------------------
     def get_head(self, root):
@@ -468,11 +558,15 @@ class my_frame():
                     ret = self.tpl_check(node)
                     continue
 
-                # 获取校验码
+                # 处理tpl_recg_code模板
                 if id == "tpl_recg_code":
                     ret = self.tpl_recg_code(node)
                     continue
 
+                # 处理tpl_itf模板
+                if id == "tpl_itf":
+                    ret = self.tpl_itf(node)
+                    continue
 
         except EXCP.my_exception as e:
             self.proc_except(e)
@@ -486,13 +580,7 @@ class my_frame():
             root = tree.getroot()
             self.get_head(root)
             ret = self.get_steps(root.iter("Step"))
-
-            # 获取cookie
-            cookies = self.browser.get_cookie("sso_token")
-            print("sso_token = {0}".format(cookies))
-
             ret = True
-
         except (EnvironmentError,
                 xml.parsers.expat.ExpatError) as e:
             my_log.log("{0}: {1}".format(
@@ -509,7 +597,8 @@ if __name__ == "__main__":
 
         fr = my_frame()
 
-        ret = fr.exec_tc(r"./test_case/login.xml")
+        # ret = fr.exec_tc(r"./test_case/login.xml")
+        ret = fr.exec_tc(r"./test_case/qryOrgByID.xml")
 
         fr.quit()
 

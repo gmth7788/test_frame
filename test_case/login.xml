@@ -40,6 +40,8 @@
 			<input_ByWhere>//*[@id="userCode"]</input_ByWhere>
 			<submit_By>xpath</submit_By>
 			<submit_ByWhere>//*[@id="btnLogin"]</submit_ByWhere>
+			<codeChange_By>xpath</codeChange_By>
+			<codeChange_ByWhere>//*[@id="codeChange"]</codeChange_ByWhere>
 			<Action>get_recg_code</Action>
 		</Step>
 		<Step>

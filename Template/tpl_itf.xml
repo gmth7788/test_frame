@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Template>
+	<Type>操作</Type>
+	<Func>接口测试</Func>
+	<Mode>src</Mode>
+	<Url>url</Url>
+	<Type>get/post/put/delete四种方法</Type>
+	<Head>请求头</Head>
+	<Data>请求体</Data>
+	<token_name>token，如果此项为空，则不获取令牌</token_name>
+	<Status>期望的返回码，如200</Status>
+</Template>

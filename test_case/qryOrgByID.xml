@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testcase>
+	<SrcType>Python</SrcType>
+	<Browser>Chrome</Browser>
+	<CaseId>id12345</CaseId>
+	<Product>产品</Product>
+	<Module>系统管理</Module>
+	<Group>BVT</Group>
+	<Type>ACase</Type>
+    <Steps>
+        <Step>
+        	<TemplateId>tpl_itf</TemplateId>
+			<Func>登录（无需验证码）</Func>
+			<Mode>src</Mode>
+			<Url>http://10.0.47.32:9009/aa/auth/login</Url>
+			<Type>post</Type>
+			<Head>{"Content-Type":"application/json"}</Head>
+			<Data>{"loginFrom": "passwordLogin4Mini","login_name": "administrator","app_id": "drapRootDomain","password": "administrator"}</Data>
+			<token_name>sso_token</token_name>
+			<Status>200</Status>
+		</Step>
+        <Step>
+			<TemplateId>tpl_itf</TemplateId>
+			<Func>根据组织机构唯一标识查询组织信息</Func>
+			<Mode>src</Mode>
+			<Url>http://10.0.47.32:9009/aa/dpds/ptaa_org/qryOrgs</Url>
+			<Type>post</Type>
+			<Head>{"Content-Type":"application/json"}</Head>
+			<Data>{"parent": "orgRootDomain"}</Data>
+			<token_name></token_name>
+			<Status>200</Status>
+		</Step>
+    </Steps>
+</testcase>

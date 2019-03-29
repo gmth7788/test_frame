@@ -19,20 +19,20 @@ class my_config:
         else:
             print("读取配置文件[%s]失败。" % cfg_file)
 
-    def get_config(self, cfg_file):
+    def get_config(self, cfg_file=r"./sjs_test.ini"):
         '''
         自省配置文件，自动添加类的属性
         :param cfg_file: 配置文件名
         :return:
         '''
-        config = configparser.ConfigParser()
-        config.read(cfg_file)
-        sections = config.sections()
+        self.config = configparser.ConfigParser()
+        self.config.read(cfg_file)
+        sections = self.config.sections()
 
         for sec in sections:
-            opts = config.options(sec)
+            opts = self.config.options(sec)
             for opt in opts:
-                setattr(self, opt, config[sec][opt])
+                setattr(self, opt, self.config[sec][opt])
 
 
         #
@@ -46,3 +46,8 @@ class my_config:
         # self.baidu_api_key = config['BAIDU_APP']['API_KEY']
         # self.baidu_secret_key = config['BAIDU_APP']['SECRET_KEY']
 
+    def set_config(self, sec, opt, value, cfg_file=r"./sjs_test.ini"):
+        self.config[sec] = {}
+        self.config[sec][opt] = value
+        with open(cfg_file, 'w') as f:
+            self.config.write(f)
