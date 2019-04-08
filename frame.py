@@ -63,6 +63,20 @@ class my_frame():
             self.browser.quit()
 
     # ----------------------------------------------------
+    # json格式化输出
+    # ----------------------------------------------------
+    def pretty_json_log(self, dict):
+        '''
+        json格式化输出
+        :param dict: 字典
+        :return:
+        '''
+        ctx = json.dumps(dict, sort_keys=True,
+                         indent=2)
+        # my_log.log(ctx)
+        print(ctx)
+
+    # ----------------------------------------------------
     # 异常处理
     # ----------------------------------------------------
     def proc_except(self, e):
@@ -440,8 +454,10 @@ class my_frame():
             func = self.get_xml_node_text(node, "Func")
             token_name = self.get_xml_node_text(node, "token_name")
 
-            header = json.loads(header)
-            data = json.loads(data)
+            if header is not None:
+                header = json.loads(header)
+            if data is not None:
+                data = json.loads(data)
 
             # 记录日志
             my_log.log('''（tpl_itf）{0}:
@@ -465,16 +481,15 @@ class my_frame():
                 header['sso_token'] = self.cfg.sso_token
 
                 if type.lower() == 'get':
-                    # todo: 待确认
                     r = requests.get(url, headers=header, params=data)
-                    print("url:{0}".format(r.url))
-                    print("head:{0}".format(r.headers))
-                    print("text:{0}".format(r.text))
+                    my_log.log("url:{0}".format(r.url))
+                    my_log.log("head:{0}".format(r.headers))
+                    my_log.log("text:{0}".format(r.text))
                 else:
                     r = requests.post(url, json=data, headers=header)
-                    print("url:{0}".format(r.url))
-                    print("head:{0}".format(r.headers))
-                    print("text:{0}".format(r.text))
+                    my_log.log("url:{0}".format(r.url))
+                    my_log.log("head:{0}".format(r.headers))
+                    my_log.log("text:{0}".format(r.text))
 
         except EXCP.my_exception as e:
             self.proc_except(e)

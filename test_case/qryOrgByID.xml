@@ -21,7 +21,18 @@
 		</Step>
         <Step>
 			<TemplateId>tpl_itf</TemplateId>
-			<Func>根据组织机构唯一标识查询组织信息</Func>
+			<Func>根据组织机构唯一标识查询组织信息接口(JKTEST-ORG-1-1)</Func>
+			<Mode>src</Mode>
+			<Url>http://10.0.47.32:9009/aa/dpds/ptaa_org/qryOrgByID?org_id=3190000005A0000</Url>
+			<Type>get</Type>
+			<Head>{"Content-Type":"application/json"}</Head>
+			<Data></Data>
+			<token_name></token_name>
+			<Status>200</Status>
+		</Step>
+        <Step>
+			<TemplateId>tpl_itf</TemplateId>
+			<Func>根据组织机构唯一标识查询组织信息(JKTEST-ORG-4-1)</Func>
 			<Mode>src</Mode>
 			<Url>http://10.0.47.32:9009/aa/dpds/ptaa_org/qryOrgs</Url>
 			<Type>post</Type>
