@@ -233,7 +233,8 @@ class my_frame():
             url = self.get_xml_node_text(node, "url")
             func = self.get_xml_node_text(node, "Func")
 
-            my_log.log("（tpl_openurl）{0}:{1}".format(
+            my_log.log('''（tpl_openurl）{0}
+            Url:{1}'''.format(
                 func, url))
 
             self.browser.get(url)
@@ -258,7 +259,10 @@ class my_frame():
             args = self.get_xml_node_text(node, "Args")
             func = self.get_xml_node_text(node, "Func")
 
-            my_log.log("（tpl_input）{0}:{1},{2},{3}".format(
+            my_log.log('''（tpl_input）{0}:
+            By:{1}
+            ByWhere:{2}
+            Args:{3}'''.format(
                 func, by, bywhere, args))
 
             if by == "xpath":
@@ -278,7 +282,9 @@ class my_frame():
             bywhere = self.get_xml_node_text(node, "ByWhere")
             func = self.get_xml_node_text(node, "Func")
 
-            my_log.log("（tpl_submit）{0}:{1},{2}".format(
+            my_log.log('''（tpl_submit）{0}:
+            By:{1}
+            ByWhere:{2}'''.format(
                 func, by, bywhere))
 
             if by == "xpath":
@@ -386,7 +392,10 @@ class my_frame():
             fail_info = self.get_xml_node_text(node, "fail_info")
             func = self.get_xml_node_text(node, "Func")
 
-            my_log.log("（tpl_check）{0}:{1},{2},{3}".format(
+            my_log.log('''（tpl_check）{0}:
+            By:{1}
+            ByWhere:{2}
+            Args:{3}'''.format(
                 func, by, bywhere, args))
 
             if by == "xpath":
@@ -410,23 +419,6 @@ class my_frame():
         :param token_name: 令牌名称
         :return:
         '''
-        # 获取token
-        # data = {
-        #     "loginFrom": "passwordLogin4Mini",
-        #     "login_name": "administrator",
-        #     "app_id": "drapRootDomain",
-        #     "password": "administrator"
-        # }
-        # header = {'Content-Type': 'application/json'}
-        # r = requests.post('http://10.0.47.32:9009/aa/auth/login',
-        #                   json=data, headers=header)
-        #
-        # print(r.json())
-        # token = r.json()['sso_token']
-        # cookies = r.cookies.get_dict()
-        # print('token:{0}'.format(token))
-        # print('cookies:{0}'.format(cookies))
-        # return {'sso_token':r.json()['sso_token'],'cookies':r.cookies.get_dict()}
         token = None
         if type.lower() == 'post':
             r = requests.post(url, json=data, headers=header)
@@ -451,7 +443,12 @@ class my_frame():
             header = json.loads(header)
             data = json.loads(data)
 
-            my_log.log("（tpl_itf）{0}:{1},{2},{3},{4}".format(
+            # 记录日志
+            my_log.log('''（tpl_itf）{0}:
+            Url:{1}
+            Type:{2}
+            Header:{3}
+            Data:{4}'''.format(
                 func, url, type, header, data))
 
             if token_name is not None:

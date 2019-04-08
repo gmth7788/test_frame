@@ -9,7 +9,7 @@ class my_config:
     获取配置
     '''
 
-    def __init__(self, cfg_file=r"./sjs_test.ini"):
+    def __init__(self, cfg_file=r"./test_frame.ini"):
         '''
         读取配置文件
         :param cfg_file:
@@ -19,7 +19,7 @@ class my_config:
         else:
             print("读取配置文件[%s]失败。" % cfg_file)
 
-    def get_config(self, cfg_file=r"./sjs_test.ini"):
+    def get_config(self, cfg_file=r"./test_frame.ini"):
         '''
         自省配置文件，自动添加类的属性
         :param cfg_file: 配置文件名
@@ -46,7 +46,7 @@ class my_config:
         # self.baidu_api_key = config['BAIDU_APP']['API_KEY']
         # self.baidu_secret_key = config['BAIDU_APP']['SECRET_KEY']
 
-    def set_config(self, sec, opt, value, cfg_file=r"./sjs_test.ini"):
+    def set_config(self, sec, opt, value, cfg_file=r"./test_frame.ini"):
         self.config[sec] = {}
         self.config[sec][opt] = value
         with open(cfg_file, 'w') as f:
